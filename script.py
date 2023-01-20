@@ -1,3 +1,6 @@
+# usamos pwinput para que no muestre el password al insertarlo
+import pwinput
+
 #Crearemos una clase de usuario, definirá permisos y cuentas abiertas
 users_data = {'admin':{'name': 'admin', 'charge': 'gerente', 'password': '1234'}}
 #users = {'name': '', 'charge': '', 'psswd': '', 'tables': {'actives': [], 'closed': []} }
@@ -5,15 +8,18 @@ table = {'name': '', 'items': [], 'assigned_to': '', 'bill': 0, 'active': False}
 comida = {'categoría': '', 'precio': 0, 'ingredientes': [], 'tags': []}
 
 def intro ():
-    user_input = input('Welcome, enter your name: ')
+    user_input = input('🌿 Welcome, enter your name: ')
     user_input = user_input.lower()
     if user_input in users_data.keys():
+        
         psswd_temp = ''
         while psswd_temp != users_data[user_input]['password']:
-            psswd_temp = input('Password: ')
+            psswd_temp = pwinput.pwinput(prompt='Password: ')
+
             if psswd_temp == users_data[user_input]['password']:
                 user_input = User(user_input, users_data[user_input]['charge'], users_data[user_input]['password'])
                 user_input.options()
+                print()
 
             else:
                 print('Incorrect password, try again')
@@ -39,17 +45,25 @@ OPCIONES:
 1.- Abrir una cuenta
 2.- Agregar un producto
 3.- Crear un usuario
+0.- Salir
 :::: :::: :::: :::
-Elija el número de la opción:  ''')
+
+'Elija el número de la opción: ''')
+
         if action == '1':
-            print('New table')
-            new_table()
+            print('>> New table')
+            #self.new_table()
         elif action == '2': 
-            print('Adding_product')
-            add_product()
+            print('>> Adding product')
+            #self.add_item()
         elif action == '3': 
-            print('>>Add new user')
+            print('>> Add new user')
+            print()
             self.add_user()
+        elif action == '0': 
+            print('>> ' + self.name.title() + ' has been signed off.')
+            print()
+            self.sign_off()
         else:
             print('>> That\'s not an option')
 
@@ -61,36 +75,39 @@ Elija el número de la opción:  ''')
             
             new_charge = ''
             while new_charge not in cargos:
-                new_charge = input('Agrega el puesto para el nuevo usuario. Gerente, Cajero o Mesero: ')
+                new_charge = input(self.name.title() + ', agrega el puesto para ' + new_name.title() + '. Gerente, Cajero o Mesero: ')
                 new_charge = new_charge.lower()
                 if new_charge in cargos:
-                    print('>> Nuevo ' + new_charge.title() + ' agregado.')
+                    print('>> ' + new_name.title() + ' has been added as ' + new_charge.title() + '.')
                     print()
                 else:
-                    print('Esa opción no existe')
+                    print('>> Esa opción no existe')
 
             
             new_password = ''
             while len(new_password) != 4:
-                new_password = input('Insertar password de nuevo usuario, 4 dígitos: ')
+                new_password = pwinput.pwinput(prompt=self.name.title() + ', inserta password para ' + new_name.title() + ', 4 dígitos: ')
                 if len(new_password) == 4:
                     print('>> Nuevo password agregado')
                     print()
                 else: 
-                    print('El password debe ser de 4 caracteres.')
+                    print('>> El password debe ser de 4 caracteres.')
                 
-            confirm_psswd = input('Confirmar password: ')
+            confirm_psswd = pwinput.pwinput(prompt='Confirmar password: ')
             if new_password == confirm_psswd: 
                 users_data[new_name] = {'name':new_name.lower(), 'charge': new_charge, 'password': new_password}
                 print()
-                print(users_data[new_name]['name'].title() + ' has been added')
-                print('{nombre} ha sido añadido como {charge} al sistema.'.format(nombre = users_data[new_name]['name'].title(), charge=users_data[new_name]['charge'] ))
+                print('✨ {nombre} ha sido añadido como {charge} al sistema.'.format(nombre = users_data[new_name]['name'].title(), charge=users_data[new_name]['charge'] ))
                 print()
                 self.options()
             
         elif self.charge != 'gerente':
             print('{name} no tiene los permisos para dar de alta un nuevo usuario.'.format(name=self.name)) 
             self.options()
+
+    def sign_off(self):
+        intro()
+
 print()
 intro()
 
