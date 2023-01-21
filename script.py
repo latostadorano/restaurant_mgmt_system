@@ -1,5 +1,29 @@
 # usamos pwinput para que no muestre el password al insertarlo
 import pwinput
+import pandas as pd
+
+menu = {'Items': ['Greek Gyro', 'Classic Burger', 'Cheeseburger', 'Bacon Burger', 'Mushroom Swiss Burger', 'Veggie Burger', 'Greek Salad', 'Green Salad', 'French Fries', 'Greek Fries', 'Soft Drinks', 'Beer', 'Milkshake'],
+        'Description': ['Traditional Greek-style gyro with lamb or chicken, tzatziki sauce, lettuce, tomato, and onion on a pita bread.',
+                         '100% beef patty, lettuce, tomato, onion, and special sauce.',
+                         'Same as the classic, but with a choice of American, cheddar, or Swiss cheese.',
+                         'Classic burger with crispy bacon and cheddar cheese.',
+                         'Classic burger with sautéed mushrooms and Swiss cheese.',
+                         'Vegetarian patty with lettuce, tomato, onion, and special sauce.',
+                         'A classic Greek salad with tomatoes, cucumbers, onions, feta cheese, and Kalamata olives, dressed with olive oil and lemon juice.',
+                         'A mix of greens, tomatoes, cucumbers, and onions, dressed with vinaigrette.',
+                         'Crispy golden fries, salt and pepper to taste',
+                         'Crispy golden fries topped with feta cheese and a sprinkle of oregano.',
+                         'Coke, Diet Coke, sprite, Fanta',
+                         'Selection of domestic and imported beers',
+                         'Vanilla, Chocolate, Strawberry'],
+        'Price': [7.99, 6.99, 7.49, 8.99, 8.49, 6.99, 5.99, 4.99, 3.99, 4.99, 1.99, 3.99, 4.99],
+        'Category': ['Gyros', 'Burgers', 'Burgers', 'Burgers', 'Burgers', 'Burgers', 'Salads', 'Salads', 'Fries', 'Fries', 'Beverages', 'Beverages', 'Desert'],
+        'Ingredients': ['Lamb or chicken, tzatziki sauce, lettuce, tomato, onion, pita bread', 'Beef patty, lettuce, tomato, onion, special sauce', 'Beef patty, lettuce, tomato, onion, special sauce, cheese', 'Beef patty, bacon, lettuce, tomato, onion, special sauce, cheddar cheese', 'Beef patty, sautéed mushrooms, Swiss cheese, lettuce, tomato, onion, special sauce', 'Vegetarian patty, lettuce, tomato, onion, special sauce', 'Tomatoes, cucumbers, onions, feta cheese, Kalamata olives, olive oil, lemon juice', 'Mixed greens, tomatoes, cucumbers, onions, vinaigrette', 'Potatoes, salt, pepper', 'Potatoes, feta cheese, oregano', '', '', '']
+}
+
+df = pd.DataFrame(menu)
+print(df)
+
 
 #Crearemos una clase de usuario, definirá permisos y cuentas abiertas
 users_data = {'admin':{'name': 'admin', 'charge': 'gerente', 'password': '1234'}}
@@ -40,11 +64,21 @@ class User:
         return "{name} is a {charge} and has {number} of active tables: {tables}".format(name=self.name, charge = self.charge, number = len(self.tables['actives']), tables = self.tables['actives'])
 
     def options(self):
-        action = input(''':::: :::: :::: :::
+        if self.charge == 'gerente': 
+            action = input(''':::: :::: :::: :::
 OPCIONES:
 1.- Abrir una cuenta
 2.- Agregar un producto
 3.- Crear un usuario
+0.- Salir
+:::: :::: :::: :::
+
+'Elija el número de la opción: ''')
+        else:
+            action = input(''':::: :::: :::: :::
+OPCIONES:
+1.- Abrir una cuenta
+2.- Agregar un producto
 0.- Salir
 :::: :::: :::: :::
 
@@ -83,23 +117,32 @@ OPCIONES:
                 else:
                     print('>> Esa opción no existe')
 
+            def new_password_function():
+                new_password = ''
+                while len(new_password) != 4:
+                    new_password = pwinput.pwinput(prompt=self.name.title() + ', inserta nuevo password para ' + new_name.title() + ', 4 dígitos: ')
+                    if len(new_password) == 4:
+                        continue
+                    else: 
+                        print('>> El password debe ser de 4 caracteres.')
+                    
+                confirm_psswd = ''
+                confirm_psswd_try = 0
+                while new_password != confirm_psswd:
+                    confirm_psswd = pwinput.pwinput(prompt='Confirmar password: ')
+                    if new_password == confirm_psswd: 
+                        users_data[new_name] = {'name':new_name.lower(), 'charge': new_charge, 'password': new_password}
+                        print()
+                        print('✨ {nombre} ha sido añadido como {charge} al sistema.'.format(nombre = users_data[new_name]['name'].title(), charge=users_data[new_name]['charge'] ))
+                        print()
+                        self.options()
+                    else:
+                        confirm_psswd_try +=1
+                        print('Confirmation failed, try again')
+                        if confirm_psswd_try > 3:
+                            new_password_function()
             
-            new_password = ''
-            while len(new_password) != 4:
-                new_password = pwinput.pwinput(prompt=self.name.title() + ', inserta password para ' + new_name.title() + ', 4 dígitos: ')
-                if len(new_password) == 4:
-                    print('>> Nuevo password agregado')
-                    print()
-                else: 
-                    print('>> El password debe ser de 4 caracteres.')
-                
-            confirm_psswd = pwinput.pwinput(prompt='Confirmar password: ')
-            if new_password == confirm_psswd: 
-                users_data[new_name] = {'name':new_name.lower(), 'charge': new_charge, 'password': new_password}
-                print()
-                print('✨ {nombre} ha sido añadido como {charge} al sistema.'.format(nombre = users_data[new_name]['name'].title(), charge=users_data[new_name]['charge'] ))
-                print()
-                self.options()
+            new_password_function()
             
         elif self.charge != 'gerente':
             print('{name} no tiene los permisos para dar de alta un nuevo usuario.'.format(name=self.name)) 
