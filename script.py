@@ -22,11 +22,12 @@ menu = {'Items': ['Greek Gyro', 'Classic Burger', 'Cheeseburger', 'Bacon Burger'
 }
 
 df = pd.DataFrame(menu)
-print(df)
+#print(df)
+#print(df.Items)
 
 
 #Crearemos una clase de usuario, definirá permisos y cuentas abiertas
-users_data = {'admin':{'name': 'admin', 'charge': 'gerente', 'password': '1234'}}
+users_data = {'admin':{'name': 'admin', 'charge': 'gerente', 'password': '1234', 'active_tables': [], 'closed_tables': []}}
 #users = {'name': '', 'charge': '', 'psswd': '', 'tables': {'actives': [], 'closed': []} }
 table = {'name': '', 'items': [], 'assigned_to': '', 'bill': 0, 'active': False} 
 comida = {'categoría': '', 'precio': 0, 'ingredientes': [], 'tags': []}
@@ -58,7 +59,8 @@ class User:
         self.name = name
         self.charge = charge
         self.password = password
-        self.tables = {'actives':[], 'closed':[]}
+        self.active_tables = []
+        self.closed_tables = []
 
     def __ref__(self):
         return "{name} is a {charge} and has {number} of active tables: {tables}".format(name=self.name, charge = self.charge, number = len(self.tables['actives']), tables = self.tables['actives'])
@@ -86,7 +88,7 @@ OPCIONES:
 
         if action == '1':
             print('>> New table')
-            #self.new_table()
+            self.add_table()
         elif action == '2': 
             print('>> Adding product')
             #self.add_item()
@@ -100,6 +102,32 @@ OPCIONES:
             self.sign_off()
         else:
             print('>> That\'s not an option')
+
+    def add_table(self):
+        new_table = input('Select new table: ')
+
+        #Aqui vamos, se agrega la mesa aunque ya la tenga alguien más
+        temp_available = True 
+        for i in users_data:
+            if new_table in users_data[i]['active_tables']:
+                temp_available = False
+                print('Table {table} is already in {name}\'s tables.'.format(table = new_table, name = users_data[i]['name'].title()))
+                #add_table(self) Aquí va un recursion
+
+        if temp_available == True:
+            users_data[self.name]['active_tables'].append(new_table)
+            print('✨ Table {table} has been added to {name}\'s tables.'.format(table = new_table, name = self.name.title()))
+
+        """ if new_table in users_data[self.name]['active_tables']:
+            print('That table already exists in {name}\'s active tables')
+        #elif new_table in #any other people's tables
+            # say it's active on someone elses tables """
+            
+        
+        print()
+        print(users_data)
+        self.options()
+
 
     def add_user(self):
         cargos = ['gerente', 'cajero', 'mesero']
@@ -131,7 +159,7 @@ OPCIONES:
                 while new_password != confirm_psswd:
                     confirm_psswd = pwinput.pwinput(prompt='Confirmar password: ')
                     if new_password == confirm_psswd: 
-                        users_data[new_name] = {'name':new_name.lower(), 'charge': new_charge, 'password': new_password}
+                        users_data[new_name] = {'name':new_name.lower(), 'charge': new_charge, 'password': new_password, 'active_tables': [], 'closed_tables': []}
                         print()
                         print('✨ {nombre} ha sido añadido como {charge} al sistema.'.format(nombre = users_data[new_name]['name'].title(), charge=users_data[new_name]['charge'] ))
                         print()
@@ -145,7 +173,7 @@ OPCIONES:
             new_password_function()
             
         elif self.charge != 'gerente':
-            print('{name} no tiene los permisos para dar de alta un nuevo usuario.'.format(name=self.name)) 
+            print('{name} no tiene los permisos para dar de alta un nuevo usuario.'.format(name=self.name.title())) 
             self.options()
 
     def sign_off(self):
