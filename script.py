@@ -31,7 +31,7 @@ df = pd.DataFrame(menu)
 users_data = {'admin':{'name': 'admin', 'charge': 'gerente', 'password': '1234', 'active_tables': [], 'closed_tables': []}}
 #users = {'name': '', 'charge': '', 'psswd': '', 'tables': {'actives': [], 'closed': []} }
 tables_data = {}
-#table = {'name': '', 'items': {}, 'assigned_to': '', 'bill': {}, 'active': False} 
+#table = {'table': '', 'items': {}, 'assigned_to': '', 'bill': 0, 'active': False} 
 comida = {'categoría': '', 'precio': 0, 'ingredientes': [], 'tags': []}
 
 def intro ():
@@ -55,16 +55,63 @@ def intro ():
         print('❗️ Not a registered user')
         intro()
 
+# We will create a function that stores data and some methods to add info to the table 
 class Table: 
-    def __init__(self, name, assigned_to):
-        self.name = name
+    def __init__(self, table, assigned_to):
+        self.table = table
         self.assigned_to = assigned_to
         self.items = {}
         self.bill = 0
         self.active = True
     def __ref__(self):
-        return "Table {table} is assigned to {name}. It has {number_of_items}, and it's bill is about {bill}".format(table=self.name, name=self.assigned_to, number_of_items=len(self.items), bill=self.bill)
+        return "Table {table} is assigned to {assigned_to}. It has {number_of_items}, and it's bill is about {bill}".format(table=self.table, assigned_to=self.assigned_to, number_of_items=len(self.items), bill=self.bill)
 
+    def add_item_table (self, table):
+        # Haremos un método dentro de la calse de Tables para detectar si sigue queriendo añadir items a la misma cuenta o a otra
+        self.table = str(table)
+        number_of_items = int(input('How many items? '))
+        print()
+        item_code = ''
+        #print(df.Items_code)
+        while item_code not in df['Items_code'].values: 
+            item_code = input('Enter the item\'s code you\'ll add to table {table}: '.format(table = self.table))
+            # If the item exists in menu:
+            if item_code in df.Items_code.values:
+                # item_name = el producto que concuerda con ese código
+                item_name = df.loc[df['Items_code'] == item_code, 'Items'].iloc[0]
+                # sacamos el precio según el código en el menú
+                item_price = df.loc[df['Items_code']== item_code, 'Price'].iloc[0]
+
+                # agregamos cantidad y producto a la cuenta
+                if item_name in tables_data[self.table]['items']:
+                    tables_data[self.table]['items'][item_name][0] += number_of_items
+                else:
+                    tables_data[self.table]['items'][item_name] = [number_of_items, item_price]
+
+                # agregamos producto a la cuenta y actualizamos la cuenta
+                tables_data[self.table]['bill'] += round((item_price * number_of_items),2)
+
+                print(tables_data)
+                print('✨ {num} {item} were added to table {table}'.format(num = number_of_items, item = item_name, table = self.table))
+                print()
+
+                input_adding = ''
+                options_adding = ['y', 'Y', 'n', 'N']
+                while input_adding not in options_adding:
+                    input_adding = input('Do you want to add another item? y/n : ')
+                    if input_adding in options_adding:
+                        if input_adding == 'y' or input_adding == 'Y':
+                            self.add_item_table(self.table)
+                        else: 
+                            pass
+                    else: 
+                        print('❗️ That is not an option. ')
+                
+            else: 
+                print('❗️ That item doesn\'t exists')
+        pass
+
+    
 # We will create a function that stores data and some methods to add info to the user
 class User:
     def __init__(self, name, charge, password):
@@ -116,7 +163,6 @@ OPCIONES:
         else:
             print('❗️  That\'s not an option')
 
-
     def add_item(self):
         table_input = ''
         number_of_items = 0
@@ -124,51 +170,13 @@ OPCIONES:
             table_input = input('Select the table to add items to: ')
             if table_input in tables_data: 
                 if table_input in users_data[self.name]['active_tables']:
-                    number_of_items = int(input('How many items? '))
-                    print()
-                    item_code = ''
-                    #print(df.Items_code)
-                    while item_code not in df['Items_code'].values: 
-                        item_code = input('Enter the item\'s code you\'ll add to table {table}: '.format(table = table_input))
-                        # If the item exists in menu:
-                        if item_code in df.Items_code.values:
-                            # item_name = el producto que concuerda con ese código
-                            item_name = df.loc[df['Items_code'] == item_code, 'Items'].iloc[0]
-                            # sacamos el precio según el código en el menú
-                            item_price = df.loc[df['Items_code']== item_code, 'Price'].iloc[0]
-
-                            # agregamos cantidad y producto a la cuenta
-                            if item_name in tables_data[table_input]['items']:
-                                tables_data[table_input]['items'][item_name][0] += number_of_items
-                            else:
-                                tables_data[table_input]['items'][item_name] = [number_of_items, item_price]
-
-                            # agregamos producto a la cuenta y actualizamos la cuenta
-                            tables_data[table_input]['bill'] += round((item_price * number_of_items),2)
-
-                            print(tables_data)
-                            print('✨ {num} {item} were added to table {table}'.format(num = number_of_items, item = item_name, table = table_input))
-                            print()
-
-                            input_adding = ''
-                            options_adding = ['y', 'Y', 'n', 'N']
-                            while input_adding not in options_adding:
-                                input_adding = input('Do you want to add another item? y/n : ')
-                                if input_adding in options_adding:
-                                    if input_adding == 'y' or input_adding == 'Y':
-                                        self.add_item()
-                                    else: 
-                                        print()
-                                        self.options()
-                                else: 
-                                    print('❗️ That is not an option. ')
-                            
-                        else: 
-                            print('❗️ That item doesn\'t exists')
+                    table_to_add = Table(table_input, self.name)
+                    table_to_add.add_item_table(table_input)
+                    # LLamaremos a un método en tables que añadirá los items a su misma mesa si así desea continuar
+                    self.options()
                 else: 
                     print('❗️ That account isn\'t yours')
                     print()
-                    
             else: 
                 print('Table {table} does not exists.'.format(table = table_input))
 
@@ -180,13 +188,11 @@ OPCIONES:
                 table_available = False
                 print('❗️ Table {table} is already in {name}\'s tables.'.format(table = new_table, name = users_data[i]['name'].title()))
                 self.add_table()
-                #add_table(self) Aquí va un recursion
 
         if table_available == True:
             users_data[self.name]['active_tables'].append(new_table)
             print('✨ Table {table} has been added to {name}\'s tables.'.format(table = new_table, name = self.name.title()))
-            new_table = Table(new_table, self.name)
-            tables_data[new_table.name] = {'name': new_table.name, 'items': {}, 'assigned_to': self.name, 'bill': 0, 'active': True}
+            tables_data[new_table] = {'name': new_table, 'items': {}, 'assigned_to': self.name, 'bill': 0, 'active': True}
             print(tables_data)            
 
         """ if new_table in users_data[self.name]['active_tables']:
