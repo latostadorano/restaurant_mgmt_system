@@ -1,7 +1,7 @@
 # usamos pwinput para que no muestre el password al insertarlo
 import pwinput
 import pandas as pd
-
+# create a dataframe Menu
 menu = {'Items': ['Greek Gyro', 'Classic Burger', 'Cheeseburger', 'Bacon Burger', 'Mushroom Swiss Burger', 'Veggie Burger', 'Greek Salad', 'Green Salad', 'French Fries', 'Greek Fries', 'Soft Drinks', 'Beer', 'Milkshake'],
         'Items_code': ['10', '20', '21', '22','23','24', '30', '31', '40', '41', '50', '51', '60'],
         'Description': ['Traditional Greek-style gyro with lamb or chicken, tzatziki sauce, lettuce, tomato, and onion on a pita bread.',
@@ -34,11 +34,13 @@ tables_data = {}
 #table = {'table': '', 'items': {}, 'assigned_to': '', 'bill': 0, 'active': False} 
 comida = {'categoría': '', 'precio': 0, 'ingredientes': [], 'tags': []}
 
+# The intro function will give the welcome to the user, at this point no one is signed in
+# Admin's password is 1234
+
 def intro ():
     user_input = input('🌿 Welcome, enter your name: ')
     user_input = user_input.lower()
     if user_input in users_data.keys():
-        
         psswd_temp = ''
         while psswd_temp != users_data[user_input]['password']:
             psswd_temp = pwinput.pwinput(prompt='Password: ')
@@ -68,7 +70,7 @@ class Table:
 
     def add_item_table (self, table):
         # Haremos un método dentro de la calse de Tables para detectar si sigue queriendo añadir items a la misma cuenta o a otra
-        self.table = str(table)
+        self.table = table
         number_of_items = int(input('How many items? '))
         print()
         item_code = ''
@@ -90,6 +92,7 @@ class Table:
 
                 # agregamos producto a la cuenta y actualizamos la cuenta
                 tables_data[self.table]['bill'] += round((item_price * number_of_items),2)
+                
 
                 print(tables_data)
                 print('✨ {num} {item} were added to table {table}'.format(num = number_of_items, item = item_name, table = self.table))
@@ -111,7 +114,37 @@ class Table:
                 print('❗️ That item doesn\'t exists')
         pass
 
+    def create_ticket(self, table):
+        # Este método creará un ticket de cuenta, agregará los items que se pidieron, se desglozará la cuenta, se agregará el impuesto y un mensaje de Vuelva pronto
+        self.table = table
+        self.bill = round(tables_data[self.table]['bill'],2)
+        print()
+        print('|˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅|')
+        print()
+        print("""..:: RESTAURANTE ::..
+.. -- BURGERS & GYROS -- ..""")
+        print()
+        print()
+        for key, value in tables_data[self.table]['items'].items():
+            quantity = value[0]
+            price = value[1]
+            item = key
+            money = round((quantity * price),2)
+            print("» {how_many} {what}             ${how_much}".format(how_many = quantity, what = item, how_much = money))
+            
+        # Aquí vamooooooossssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss!!
+        print()
+        print('TOTAL            ${total}'.format(total = self.bill))
+        print()
+        print('💵💰💵💰💵💰💵💰')
+        print()
+        print()
+        print('|˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅˄˅|')
+
     
+        print()
+
+
 # We will create a function that stores data and some methods to add info to the user
 class User:
     def __init__(self, name, charge, password):
@@ -131,6 +164,8 @@ OPCIONES:
 1.- Abrir una cuenta
 2.- Agregar un producto
 3.- Crear un usuario
+4.- Close bill
+5.- Create ticket bill
 0.- Salir
 :::: :::: :::: :::
 
@@ -140,6 +175,7 @@ OPCIONES:
 OPCIONES:
 1.- Abrir una cuenta
 2.- Agregar un producto
+5.- Create ticket bill
 0.- Salir
 :::: :::: :::: :::
 
@@ -156,6 +192,15 @@ OPCIONES:
             print('>> Add new user')
             print()
             self.add_user()
+        elif action == '4':
+            print('> Close bill')
+            print()
+            self.close_bill()
+        elif action == '5': 
+            print('> Create ticket bill')
+            print()
+            self.ticket_bill()
+
         elif action == '0': 
             print('>> ' + self.name.title() + ' has been signed off.')
             print()
@@ -252,6 +297,42 @@ OPCIONES:
             print('❗️ {name} no tiene los permisos para dar de alta un nuevo usuario.'.format(name=self.name.title())) 
             self.options()
 
+    def ticket_bill(self):
+        #Aquí voooooooooooooooooooooooooooooooooooooooooooooyyyyy!!
+        table_input = ''
+        while table_input not in tables_data:
+            table_input = input('Select the table to make bill ticket: ')
+            if table_input in tables_data: 
+                if table_input in users_data[self.name]['active_tables']:
+                    table_bill = Table(table_input, self.name)
+                    table_bill.create_ticket(table_input)
+                    # LLamaremos a un método en tables que añadirá los items a su misma mesa si así desea continuar
+                    self.options()
+                else: 
+                    print('❗️ That account isn\'t yours')
+                    print()
+            else: 
+                print('Table {table} does not exists.'.format(table = table_input))
+
+    def close_bill(self):
+        # We will create a function for the chashier to clear a table's bill as payed
+        table_input = ''
+        while table_input not in tables_data:
+            table_input = input('Enter the table you want to close: ')
+            if table_input in tables_data:
+                if tables_data[table_input]['active'] == True:
+                    tables_data[table_input]['active'] = False
+                    print('✨ You have closed table {table}.'.format(table = table_input))
+                    print(tables_data)
+                    print()
+                    self.options()
+
+                else:
+                    print('❗️ That table is already closed. ')
+            else: 
+                print("❗️ That table doesn't exists")
+
+        
     def sign_off(self):
         intro()
 
